@@ -10,7 +10,5 @@
 
 @interface MainView : UIView
 
-@property (nonatomic, strong)NSMutableArray *dataArray;
-@property (nonatomic, strong)UIScrollView *scrollView;
 
 @end

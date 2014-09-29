@@ -12,6 +12,13 @@
 #define COLUMN_COUNT 3
 #define IMAGEVIEW_BASE_TAG 100
 
+@interface MainView()
+
+@property (nonatomic, strong)NSMutableArray *dataArray;
+@property (nonatomic, strong)UIScrollView *scrollView;
+
+@end
+
 @implementation MainView
 
 - (id)initWithFrame:(CGRect)frame
@@ -30,7 +37,7 @@
     // 存储图片地址的数组
     self.dataArray = [[NSMutableArray alloc] init];
     for (int i = 0; i<ROW_COUNT*COLUMN_COUNT; i++) {
-        [self.dataArray addObject:[NSString stringWithFormat:@"http://images.cnblogs.com/cnblogs_com/kenshincui/613474/o_%i.jpg", i]];
+        [self.dataArray addObject:[NSString stringWithFormat:@"http://images.cnblogs.com/cnblogs_com/pigpigDD/616506/o_%d.png", i+1]];
     }
 }
 
@@ -60,6 +67,7 @@
 }
 
 - (void)downImage:(int)index{
+    NSLog(@"222%@", [NSThread currentThread]);
     // 获取图片
     NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@", [self.dataArray objectAtIndex:index]]];
     NSData *data = [NSData dataWithContentsOfURL:url];
@@ -69,37 +77,42 @@
     // 获取主线程队列
     dispatch_queue_t mainQueue = dispatch_get_main_queue();
     // 在主线程中更新下载好的图片
-    dispatch_sync(mainQueue, ^{
+    dispatch_async(mainQueue, ^{
         UIImageView *imageView = (UIImageView *)[self viewWithTag:IMAGEVIEW_BASE_TAG + index];
         imageView.image = image;
     });
 }
 
 
-//- (void)loadImage
-//{
-//    // 创建一个串行队列
-//    dispatch_queue_t serialQueue = dispatch_queue_create("mySerialQueue", DISPATCH_QUEUE_SERIAL);
-//    for (int i = 0; i<ROW_COUNT*COLUMN_COUNT; i++) {
-//        dispatch_async(serialQueue, ^{
-//            [self downImage:i];
-//        });
-//    }
-//}
-
--(void)loadImage{
-    int count=ROW_COUNT*COLUMN_COUNT;
-    
-    //
-    dispatch_queue_t globalQueue=dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    //创建多个线程用于填充图片
-    for (int i=0; i<count; ++i) {
-        //异步执行队列任务
-        dispatch_async(globalQueue, ^{
+- (void)loadImage
+{
+    // 创建一个串行队列
+    dispatch_queue_t serialQueue = dispatch_queue_create("com.dispatch.serialQueue", DISPATCH_QUEUE_SERIAL);
+    NSLog(@"111%@", [NSThread currentThread]);
+    for (int i = 0; i<ROW_COUNT*COLUMN_COUNT; i++) {
+        dispatch_sync(serialQueue, ^{
             [self downImage:i];
         });
     }
 }
+
+//-(void)loadImage{
+//    int count=ROW_COUNT*COLUMN_COUNT;
+//    
+//    // 使用全局并发队列
+//    //dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+//    
+//    // 使用自己创建的并发队列
+//    dispatch_queue_t concurrentQueue = dispatch_queue_create("com.dispatch.concurrentQueue", DISPATCH_QUEUE_CONCURRENT);
+//    //创建多个线程用于填充图片
+//    NSLog(@"111%@", [NSThread currentThread]);
+//    for (int i=0; i<count; ++i) {
+//        //异步执行队列任务
+//        dispatch_async(concurrentQueue, ^{
+//            [self downImage:i];
+//        });
+//    }
+//}
 
 
 @end
